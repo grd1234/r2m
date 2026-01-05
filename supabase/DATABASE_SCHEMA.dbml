@@ -1,0 +1,239 @@
+// R2M Marketplace Database Schema
+// Use this at dbdiagram.io to generate ER diagram
+// Instructions: Copy this entire file content to https://dbdiagram.io/d
+
+Table profiles {
+  id uuid [primary key, note: 'References auth.users']
+  email text [unique, not null]
+  full_name text
+  user_type text [not null, note: 'startup, investor, corporate_rd, tto, innovation_hub, researcher']
+  company_name text
+  role text
+  avatar_url text
+  subscription_tier text [default: 'free', note: 'free, basic, premium, pro, growth, enterprise']
+  subscription_status text [default: 'active', note: 'active, cancelled, past_due, trialing']
+  cvs_reports_used integer [default: 0]
+  cvs_reports_limit integer [default: 3]
+  subscription_renews_at timestamptz
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table research_papers {
+  id uuid [primary key]
+  uploaded_by uuid [ref: > profiles.id, not null]
+  title text [not null]
+  authors text[] [note: 'Array of author names']
+  abstract text
+  keywords text[] [note: 'Array of keywords']
+  publication_date date
+  citation_count integer [default: 0]
+  doi text
+  pdf_url text [note: 'Supabase Storage URL']
+  external_id text [note: 'arXiv ID, Semantic Scholar ID, etc.']
+  source text [note: 'user_upload, arxiv, semantic_scholar, pubmed']
+  is_published_to_marketplace boolean [default: false]
+  marketplace_description text
+  tech_category text [note: 'AI/ML, Biotech, Materials, etc.']
+  industry text [note: 'Healthcare, Energy, Manufacturing, etc.']
+  stage text [note: 'Concept, Prototype, Pilot, Market-Ready']
+  funding_goal numeric
+  view_count integer [default: 0]
+  metadata jsonb
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table cvs_analyses {
+  id uuid [primary key]
+  paper_id uuid [ref: > research_papers.id, note: 'Can be null for standalone analyses']
+  analyzed_by uuid [ref: > profiles.id, not null]
+  title text [not null]
+  query text [not null, note: 'Original search query or analysis prompt']
+  cvs_score integer [note: '0-100, overall Commercial Viability Score']
+  technical_score integer [note: '0-25 points']
+  market_score integer [note: '0-25 points']
+  commercial_score integer [note: '0-20 points']
+  competitive_score integer [note: '0-15 points']
+  ip_score integer [note: '0-10 points']
+  risk_score integer [note: '0-5 points']
+  tam numeric [note: 'Total Addressable Market in USD']
+  trl integer [note: 'Technology Readiness Level 1-9']
+  target_industry text
+  summary text
+  recommendations text
+  key_strengths text[] [note: 'Array of strength descriptions']
+  key_risks text[] [note: 'Array of risk descriptions']
+  go_to_market_strategy text
+  status text [default: 'pending', note: 'pending, processing, completed, failed']
+  is_ai_generated boolean [default: false]
+  analysis_notes jsonb
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table analysis_papers {
+  id uuid [primary key]
+  analysis_id uuid [ref: > cvs_analyses.id, not null]
+  title text [not null]
+  authors text[] [note: 'Array of author names']
+  abstract text
+  publication_date date
+  citation_count integer
+  url text
+  relevance_score numeric [note: 'How relevant this paper is to the analysis']
+  created_at timestamptz [default: `now()`]
+}
+
+Table saved_opportunities {
+  id uuid [primary key]
+  user_id uuid [ref: > profiles.id, not null]
+  paper_id uuid [ref: > research_papers.id, not null]
+  notes text [note: 'User notes about why they saved this']
+  created_at timestamptz [default: `now()`]
+
+  indexes {
+    (user_id, paper_id) [unique, name: 'unique_user_paper']
+  }
+}
+
+Table introduction_requests {
+  id uuid [primary key]
+  paper_id uuid [ref: > research_papers.id, not null]
+  investor_id uuid [ref: > profiles.id, not null, note: 'Who is requesting introduction']
+  startup_id uuid [ref: > profiles.id, not null, note: 'Who owns the research paper']
+  message text [note: 'Message from investor to startup']
+  status text [default: 'pending', note: 'pending, accepted, declined']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table investment_commitments {
+  id uuid [primary key]
+  paper_id uuid [ref: > research_papers.id, not null]
+  investor_id uuid [ref: > profiles.id, not null]
+  startup_id uuid [ref: > profiles.id, not null]
+  amount numeric [not null, note: 'Investment amount in USD']
+  investment_type text [not null, note: 'safe, convertible, equity, revenue, flexible']
+  timeline text [not null, note: '30, 60, 90, flexible days']
+  message text
+  status text [default: 'pending', note: 'pending, accepted, declined, withdrawn']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table deals {
+  id uuid [primary key]
+  commitment_id uuid [ref: > investment_commitments.id, not null, note: 'Created when commitment accepted']
+  status text [default: 'committed', note: 'committed, due_diligence, term_sheet, closing, closed, failed']
+  progress integer [default: 0, note: '0-100 percentage']
+  start_date date [default: `current_date`]
+  expected_close_date date
+  actual_close_date date
+  milestones jsonb [note: 'JSON tracking milestone completion']
+  documents jsonb [note: 'JSON tracking required documents']
+  notes text
+  update_history jsonb [note: 'Array of status changes']
+  success_fee_paid boolean [default: false, note: '2-5% platform fee']
+  success_fee_amount numeric
+  success_fee_invoice_id text [note: 'Stripe invoice ID']
+  success_fee_paid_at timestamptz
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table deal_updates {
+  id uuid [primary key]
+  deal_id uuid [ref: > deals.id, not null]
+  user_id uuid [ref: > profiles.id, not null, note: 'Who made the update']
+  old_status text
+  new_status text
+  note text
+  created_at timestamptz [default: `now()`]
+}
+
+Table batch_analyses {
+  id uuid [primary key]
+  user_id uuid [ref: > profiles.id, not null]
+  batch_name text [not null]
+  total_queries integer [not null]
+  completed_count integer [default: 0]
+  status text [default: 'pending', note: 'pending, processing, completed, failed']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table batch_results {
+  id uuid [primary key]
+  batch_id uuid [ref: > batch_analyses.id, not null]
+  query text [not null]
+  cvs_score integer
+  status text [default: 'pending', note: 'pending, processing, completed, failed']
+  result_summary text
+  analysis_id uuid [ref: > cvs_analyses.id, note: 'Link to full analysis if created']
+  created_at timestamptz [default: `now()`]
+}
+
+Table team_members {
+  id uuid [primary key]
+  owner_id uuid [ref: > profiles.id, not null, note: 'Account owner']
+  member_email text [not null]
+  role text [default: 'member', note: 'admin, member, viewer']
+  permissions text[] [note: 'Array of permission strings']
+  status text [default: 'invited', note: 'invited, active, inactive']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table activities {
+  id uuid [primary key]
+  user_id uuid [ref: > profiles.id, not null]
+  activity_type text [not null, note: 'cvs_analysis_completed, paper_uploaded, etc.']
+  entity_type text [note: 'paper, analysis, deal, etc.']
+  entity_id uuid [note: 'ID of the related entity']
+  description text
+  metadata jsonb
+  created_at timestamptz [default: `now()`]
+}
+
+Table subscriptions {
+  id uuid [primary key]
+  user_id uuid [ref: > profiles.id, not null]
+  stripe_customer_id text [unique]
+  stripe_subscription_id text [unique]
+  stripe_price_id text
+  tier text [not null, note: 'free, basic, premium, pro, growth, enterprise']
+  status text [not null, note: 'active, cancelled, past_due, trialing, incomplete']
+  current_period_start timestamptz
+  current_period_end timestamptz
+  cancel_at_period_end boolean [default: false]
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+}
+
+Table notifications {
+  id uuid [primary key]
+  user_id uuid [ref: > profiles.id, not null]
+  type text [not null, note: 'cvs_analysis_ready, investor_interest, deal_update, etc.']
+  title text [not null]
+  message text [not null]
+  link text [note: 'URL to relevant page']
+  is_read boolean [default: false]
+  metadata jsonb
+  created_at timestamptz [default: `now()`]
+}
+
+// Relationship Notes:
+// - One profile can upload many research papers
+// - One profile can create many CVS analyses
+// - One research paper can have multiple CVS analyses
+// - One CVS analysis references many related papers
+// - One profile can save many research papers (watchlist)
+// - Introduction requests connect investor + startup via a paper
+// - Investment commitments connect investor + startup via a paper
+// - One commitment creates one deal (when accepted)
+// - One deal has many updates (audit trail)
+// - One profile can create many batch analyses
+// - One batch contains many individual results
+// - One profile can have many team members
+// - One profile receives many notifications

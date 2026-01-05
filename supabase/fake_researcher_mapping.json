@@ -1,0 +1,102 @@
+{
+  "AI/ML": {
+    "name": "Dr. Maria Lopez",
+    "email": "demo+researcher_ai@infyra.ai",
+    "affiliation": "Stanford AI Lab",
+    "title": "Associate Professor",
+    "expertise": ["Transformers", "Attention Mechanisms", "NLP", "Computer Vision"],
+    "h_index": 45,
+    "citation_count": 12000,
+    "bio": "AI researcher specializing in attention mechanisms and transformer architectures. Published seminal work on efficient transformers. Open to commercialization partnerships."
+  },
+  "Healthcare": {
+    "name": "Dr. John Smith",
+    "email": "demo+researcher_healthcare@infyra.ai",
+    "affiliation": "MIT Media Lab",
+    "title": "Principal Research Scientist",
+    "expertise": ["Drug Discovery", "Computational Biology", "Precision Medicine", "AI for Healthcare"],
+    "h_index": 38,
+    "citation_count": 8500,
+    "bio": "Computational biologist focused on AI-driven drug discovery. Previously developed novel methods for protein folding prediction. Active in industry collaborations."
+  },
+  "Climate Tech": {
+    "name": "Dr. Emily Zhang",
+    "email": "demo+researcher_climate@infyra.ai",
+    "affiliation": "UC Berkeley Climate Lab",
+    "title": "Assistant Professor",
+    "expertise": ["Carbon Capture", "Renewable Energy", "Materials Science", "Climate Modeling"],
+    "h_index": 28,
+    "citation_count": 5200,
+    "bio": "Climate scientist developing novel carbon capture materials. Interested in translating research to commercial applications. Co-founded 1 climate tech startup."
+  },
+  "Semiconductors": {
+    "name": "Dr. David Park",
+    "email": "demo+researcher_semiconductors@infyra.ai",
+    "affiliation": "TSMC Research",
+    "title": "Senior Researcher",
+    "expertise": ["Chip Design", "Lithography", "3nm Process", "AI Chips"],
+    "h_index": 35,
+    "citation_count": 7800,
+    "bio": "Semiconductor researcher with focus on advanced lithography techniques. Led development of 3nm process innovations. Available for IP licensing discussions."
+  },
+  "Biotech": {
+    "name": "Dr. Sarah Johnson",
+    "email": "demo+researcher_biotech@infyra.ai",
+    "affiliation": "Harvard Medical School",
+    "title": "Professor of Genetics",
+    "expertise": ["CRISPR", "Gene Therapy", "Synthetic Biology", "Genomics"],
+    "h_index": 52,
+    "citation_count": 15000,
+    "bio": "Geneticist pioneering CRISPR-based therapeutics. Founded 2 biotech companies. Strong track record of successful tech transfer."
+  },
+  "Energy": {
+    "name": "Dr. Ahmed Hassan",
+    "email": "demo+researcher_energy@infyra.ai",
+    "affiliation": "Caltech Energy Lab",
+    "title": "Associate Professor",
+    "expertise": ["Battery Technology", "Energy Storage", "Grid Optimization", "Power Electronics"],
+    "h_index": 31,
+    "citation_count": 6700,
+    "bio": "Energy systems researcher focused on next-gen battery technologies. Holds 12 patents in solid-state batteries. Open to licensing partnerships."
+  },
+  "Materials": {
+    "name": "Dr. Lisa Chen",
+    "email": "demo+researcher_materials@infyra.ai",
+    "affiliation": "MIT Materials Lab",
+    "title": "Principal Research Scientist",
+    "expertise": ["Nanomaterials", "2D Materials", "Graphene", "Advanced Composites"],
+    "h_index": 40,
+    "citation_count": 10200,
+    "bio": "Materials scientist developing novel 2D materials for electronics and energy applications. Active in industry consulting. Advisory board member at 3 startups."
+  },
+  "Robotics": {
+    "name": "Dr. Tomas Rodriguez",
+    "email": "demo+researcher_robotics@infyra.ai",
+    "affiliation": "Carnegie Mellon Robotics Institute",
+    "title": "Associate Professor",
+    "expertise": ["Autonomous Systems", "Computer Vision", "Robot Learning", "Manipulation"],
+    "h_index": 36,
+    "citation_count": 8900,
+    "bio": "Robotics researcher specializing in autonomous manipulation and learning. Co-founded autonomous warehouse robotics company. Looking for next commercialization opportunity."
+  },
+  "Fintech": {
+    "name": "Dr. Priya Sharma",
+    "email": "demo+researcher_fintech@infyra.ai",
+    "affiliation": "Stanford Economics",
+    "title": "Assistant Professor",
+    "expertise": ["Blockchain", "Cryptography", "DeFi", "Payment Systems"],
+    "h_index": 22,
+    "citation_count": 3800,
+    "bio": "Economist and cryptographer researching decentralized finance systems. Published influential work on blockchain scalability. Advisory role at 2 crypto companies."
+  },
+  "Consumer": {
+    "name": "Dr. Marcus Lee",
+    "email": "demo+researcher_consumer@infyra.ai",
+    "affiliation": "Northwestern Kellogg",
+    "title": "Associate Professor of Marketing",
+    "expertise": ["Consumer Behavior", "AI Personalization", "Recommendation Systems", "E-commerce"],
+    "h_index": 29,
+    "citation_count": 6100,
+    "bio": "Marketing researcher focused on AI-driven personalization. Consulted for Fortune 500 companies on recommendation algorithms. Published 3 books on consumer psychology."
+  }
+}

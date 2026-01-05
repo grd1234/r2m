@@ -1,0 +1,350 @@
+/**
+ * Analysis Results Page with Live Progress Tracking
+ *
+ * This is an EXAMPLE showing how to integrate CVSProgressGraph
+ * into your existing results page.
+ *
+ * To use:
+ * 1. Copy this code
+ * 2. Replace your existing src/app/analysis/results/[id]/page.tsx
+ * 3. Adjust based on your current implementation
+ */
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { CVSProgressGraph } from '@/components/analysis/CVSProgressGraph';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Download, Share2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+interface CVSAnalysis {
+  id: string;
+  query: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  cvs_score: number | null;
+  technical_score: number | null;
+  market_score: number | null;
+  competitive_score: number | null;
+  ip_score: number | null;
+  tam_estimate: number | null;
+  trl_level: number | null;
+  recommendations: string | null;
+  created_at: string;
+}
+
+export default function AnalysisResultsPage({
+  params
+}: {
+  params: { id: string }
+}) {
+  const [analysis, setAnalysis] = useState<CVSAnalysis | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  // Fetch analysis data
+  useEffect(() => {
+    async function fetchAnalysis() {
+      try {
+        const { data, error } = await supabase
+          .from('cvs_analyses')
+          .select('*')
+          .eq('id', params.id)
+          .single();
+
+        if (error) throw error;
+        setAnalysis(data);
+      } catch (err) {
+        console.error('Failed to fetch analysis:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchAnalysis();
+  }, [params.id]);
+
+  // Handle analysis completion
+  const handleAnalysisComplete = (graphState: any) => {
+    console.log('Analysis completed!', graphState);
+
+    // Refresh analysis data to get final scores
+    supabase
+      .from('cvs_analyses')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setAnalysis(data);
+      });
+  };
+
+  // Handle analysis error
+  const handleAnalysisError = (errorMsg: string) => {
+    console.error('Analysis failed:', errorMsg);
+    setError(errorMsg);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-gray-500">Loading analysis...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-6 border-red-500 bg-red-50 dark:bg-red-900/20">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+            Error Loading Analysis
+          </h2>
+          <p className="text-red-600 dark:text-red-300">{error}</p>
+          <Button asChild className="mt-4">
+            <Link href="/analysis/search">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Start New Analysis
+            </Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-6">
+          <p>Analysis not found</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const isAnalysisInProgress = analysis.status === 'pending' || analysis.status === 'in_progress';
+  const isAnalysisCompleted = analysis.status === 'completed';
+
+  return (
+    <div className="container mx-auto p-6 max-w-6xl">
+      {/* Header */}
+      <div className="mb-6">
+        <Button variant="ghost" asChild className="mb-4">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </Button>
+
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">CVS Analysis Results</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              {analysis.query}
+            </p>
+          </div>
+
+          {isAnalysisCompleted && (
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Live Progress Graph - Show when analysis is running */}
+      {isAnalysisInProgress && (
+        <div className="mb-8">
+          <CVSProgressGraph
+            analysisId={params.id}
+            onComplete={handleAnalysisComplete}
+            onError={handleAnalysisError}
+          />
+        </div>
+      )}
+
+      {/* Results - Show when analysis is completed */}
+      {isAnalysisCompleted && analysis.cvs_score !== null && (
+        <>
+          {/* CVS Score Summary Card */}
+          <Card className="p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Commercial Viability Score</h2>
+              <Badge
+                variant={
+                  analysis.cvs_score >= 80
+                    ? 'default'
+                    : analysis.cvs_score >= 65
+                    ? 'secondary'
+                    : 'outline'
+                }
+                className="text-lg px-4 py-1"
+              >
+                {analysis.cvs_score}/100
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+              {/* Technical Score */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {analysis.technical_score || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Technical Merit
+                </div>
+                <div className="text-xs text-gray-500">(40%)</div>
+              </div>
+
+              {/* Market Score */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {analysis.market_score || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Market Opportunity
+                </div>
+                <div className="text-xs text-gray-500">(45%)</div>
+              </div>
+
+              {/* Competitive Score */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {analysis.competitive_score || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Competitive Position
+                </div>
+                <div className="text-xs text-gray-500">(15%)</div>
+              </div>
+
+              {/* TAM */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  ${analysis.tam_estimate || 0}B
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  TAM
+                </div>
+                <div className="text-xs text-gray-500">Total Market</div>
+              </div>
+
+              {/* TRL */}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-teal-600">
+                  {analysis.trl_level || 'N/A'}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  TRL Level
+                </div>
+                <div className="text-xs text-gray-500">Readiness</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Recommendations */}
+          {analysis.recommendations && (
+            <Card className="p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  {analysis.recommendations}
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {/* Additional Analysis Sections */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Technical Analysis */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-3">Technical Analysis</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">TRL Level:</span>
+                  <span className="font-medium">{analysis.trl_level || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Technical Score:</span>
+                  <span className="font-medium">{analysis.technical_score}/40</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Market Analysis */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-3">Market Analysis</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">TAM:</span>
+                  <span className="font-medium">${analysis.tam_estimate}B</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Market Score:</span>
+                  <span className="font-medium">{analysis.market_score}/45</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* IP Analysis */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-3">IP Landscape</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">IP Score:</span>
+                  <span className="font-medium">{analysis.ip_score}/10</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Competitive Analysis */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-3">Competitive Position</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Competitive Score:</span>
+                  <span className="font-medium">{analysis.competitive_score}/15</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-8 flex gap-4">
+            <Button size="lg">
+              Publish to Marketplace
+            </Button>
+            <Button variant="outline" size="lg">
+              Request Investor Introductions
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* Waiting State - Analysis hasn't started yet */}
+      {analysis.status === 'pending' && (
+        <Card className="p-6">
+          <p className="text-gray-600 dark:text-gray-400">
+            Your analysis is queued and will start shortly...
+          </p>
+        </Card>
+      )}
+    </div>
+  );
+}
