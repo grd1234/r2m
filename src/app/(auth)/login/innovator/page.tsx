@@ -131,10 +131,10 @@ export default function InnovatorLoginPage() {
             .insert({
               id: data.user.id,
               email: data.user.email!,
-              full_name: data.user.email?.split('@')[0] || 'User',
+              full_name: data.user.email?.split('@')[0] ?? 'User',
               user_type: 'startup',
               company_name: '',
-            })
+            } as any)
 
           if (createError) {
             console.error('Failed to create profile:', createError)
