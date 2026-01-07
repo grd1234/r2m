@@ -56,7 +56,7 @@ export default function InvestorLoginPage() {
             .from('profiles')
             .insert({
               id: data.user.id,
-              email: data.user.email || '',
+              email: data.user.email!,
               full_name: data.user.email?.split('@')[0] || 'User',
               user_type: 'investor',
               company_name: '',
