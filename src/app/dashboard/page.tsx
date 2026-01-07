@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navigation } from '@/components/shared/Navigation'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useUserStore } from '@/store/useUserStore'
 import { createClient } from '@/lib/supabase/client'
-import { Search, BarChart3, TrendingUp, FileText, DollarSign, CheckCircle, XCircle, Trash2 } from 'lucide-react'
+import { Search, BarChart3, TrendingUp, FileText, DollarSign, CheckCircle, XCircle, Trash2, Store } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -179,7 +179,7 @@ export default function DashboardPage() {
   }
 
   // Fetch user's CVS analyses
-  const fetchAnalyses = async () => {
+  const fetchAnalyses = useCallback(async () => {
     if (!user?.id) {
       console.log('fetchAnalyses: No user ID, skipping fetch')
       return
@@ -246,12 +246,39 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error in fetchAnalyses:', error)
     }
-  }
+  }, [user?.id, user?.email, supabase])
 
   useEffect(() => {
     fetchAnalyses()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
+
+  // Refresh data when page becomes visible (e.g., when navigating back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user?.id) {
+        console.log('Dashboard: Page became visible, refreshing data...')
+        fetchAnalyses()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Also refresh on page focus
+    const handleFocus = () => {
+      if (user?.id) {
+        console.log('Dashboard: Page gained focus, refreshing data...')
+        fetchAnalyses()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [user?.id, fetchAnalyses])
 
   const handleAcceptCommitment = (commitment: any) => {
     setAcceptingCommitment(commitment.name)
@@ -761,7 +788,9 @@ export default function DashboardPage() {
                               onClick={(e) => {
                                 e.stopPropagation()
                                 // Navigate to technical report in same tab to preserve auth
-                                router.push(`/api/analysis/${analysis.id}/technical-report`)
+                                // Use analysis_id for report retrieval (not cvs_analyses.id)
+                                const reportId = analysis.analysis_id || analysis.id
+                                router.push(`/api/analysis/${reportId}/technical-report`)
                               }}
                             >
                               <FileText className="w-3 h-3 mr-1" />
@@ -773,11 +802,26 @@ export default function DashboardPage() {
                               onClick={(e) => {
                                 e.stopPropagation()
                                 // Navigate to CVS report in same tab to preserve auth
-                                router.push(`/api/analysis/${analysis.id}/cvs-report`)
+                                // Use analysis_id for report retrieval (not cvs_analyses.id)
+                                const reportId = analysis.analysis_id || analysis.id
+                                router.push(`/api/analysis/${reportId}/cvs-report`)
                               }}
                             >
                               <BarChart3 className="w-3 h-3 mr-1" />
                               CVS Report
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-transparent border-green-400/50 text-green-400 hover:bg-green-500/20 hover:border-green-400 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                // Navigate to marketplace creation page
+                                router.push(`/marketplace/create?analysisId=${analysis.id}`)
+                              }}
+                            >
+                              <Store className="w-3 h-3 mr-1" />
+                              Publish to Marketplace
                             </Button>
                           </div>
                         )}

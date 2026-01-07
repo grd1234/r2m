@@ -99,14 +99,28 @@ export default function AnalysisSearchPage() {
     setError('')
 
     try {
-      // Create analysis record
+      // Generate unique analysis_id for tracking this analysis across all workflows
+      const analysisId = crypto.randomUUID()
+      console.log('Generated analysis_id:', analysisId)
+
+      // Store analysis_id in localStorage for later retrieval
+      localStorage.setItem(`analysis_${analysisId}`, JSON.stringify({
+        analysisId,
+        query: searchQuery,
+        domain,
+        userEmail,
+        timestamp: Date.now()
+      }))
+
+      // Create analysis record with the analysis_id
       const { data: analysisData, error: analysisError } = await supabase
         .from('cvs_analyses')
         .insert({
-          analyzed_by: user.email,  // Use email instead of UUID
+          analyzed_by: user.email,
           title: searchQuery,
           query: searchQuery,
           status: 'processing',
+          analysis_id: analysisId,  // Store the tracking ID
         })
         .select()
         .single()
@@ -124,7 +138,7 @@ export default function AnalysisSearchPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          analysisId: analysisData.id,
+          analysisId: analysisId,  // Use the tracking ID, not database ID
           query: searchQuery,
           domain: domain,
           user_email: userEmail,

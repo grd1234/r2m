@@ -47,12 +47,12 @@ export async function GET(
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // Fetch the analysis
-    console.log('Fetching analysis from database...')
+    // Fetch the analysis using analysis_id (not the database id)
+    console.log('Fetching CVS analysis using analysis_id:', id)
     const { data: analysis, error } = await supabase
       .from('cvs_analyses')
       .select('email_report, analyzed_by, title, status')
-      .eq('id', id)
+      .eq('analysis_id', id)
       .single()
 
     console.log('Database query result:', {

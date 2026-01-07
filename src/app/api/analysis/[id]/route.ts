@@ -33,7 +33,7 @@ export async function DELETE(
       .from('cvs_analyses')
       .select('*')
       .eq('id', analysisId)
-      .eq('analyzed_by', user.id)  // Ensure user owns this analysis
+      .eq('analyzed_by', user.email)  // Ensure user owns this analysis (analyzed_by is email)
       .single()
 
     if (fetchError || !analysis) {
@@ -48,7 +48,7 @@ export async function DELETE(
       .from('cvs_analyses')
       .delete()
       .eq('id', analysisId)
-      .eq('analyzed_by', user.id)  // Double-check ownership
+      .eq('analyzed_by', user.email)  // Double-check ownership (analyzed_by is email)
 
     if (deleteError) {
       console.error('Error deleting analysis:', deleteError)

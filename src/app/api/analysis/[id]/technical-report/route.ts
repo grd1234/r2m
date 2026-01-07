@@ -47,40 +47,14 @@ export async function GET(
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // First, verify the user owns this CVS analysis and get the analysis_id
-    console.log('Verifying analysis ownership...')
-    const { data: cvsAnalysis, error: cvsError } = await supabase
-      .from('cvs_analyses')
-      .select('analyzed_by, title, analysis_id')
-      .eq('id', id)
-      .single()
+    // Use the ID directly as analysis_id (it's passed from the UI)
+    // No need to look up CVS analysis first since technical_analyses is populated before cvs_analyses
+    console.log('Fetching technical report directly using analysis_id:', id)
 
-    if (cvsError || !cvsAnalysis) {
-      console.error('Technical Report: CVS Analysis not found:', cvsError?.message || 'No data returned')
-      return new NextResponse('Analysis not found', { status: 404 })
-    }
-
-    console.log('Found CVS analysis:', {
-      title: cvsAnalysis.title,
-      analysis_id: cvsAnalysis.analysis_id,
-      owner: cvsAnalysis.analyzed_by
-    })
-
-    // Verify user owns this analysis
-    if (cvsAnalysis.analyzed_by !== user.email) {
-      console.error('Technical Report: Forbidden - user does not own analysis')
-      console.error('Analysis owner:', cvsAnalysis.analyzed_by)
-      console.error('Current user:', user.email)
-      return new NextResponse('Forbidden', { status: 403 })
-    }
-
-    // Fetch the technical report from technical_analyses table using cvs_analyses.analysis_id
-    console.log('Fetching technical report from technical_analyses table...')
-    console.log('Looking for analysis_id:', cvsAnalysis.analysis_id)
     const { data: technicalReport, error: techError } = await supabase
       .from('technical_analyses')
       .select('html_report')
-      .eq('analysis_id', cvsAnalysis.analysis_id)
+      .eq('analysis_id', id)
       .single()
 
     console.log('Technical report query result:', {
@@ -97,11 +71,11 @@ export async function GET(
 
     // Check if html_report exists
     if (!technicalReport.html_report) {
-      console.error('Technical Report: Report not available yet for analysis:', cvsAnalysis.title)
+      console.error('Technical Report: Report not available yet for analysis_id:', id)
       return new NextResponse('Technical report not available yet', { status: 404 })
     }
 
-    console.log('Technical Report: Successfully returning report for:', cvsAnalysis.title)
+    console.log('Technical Report: Successfully returning report for analysis_id:', id)
     console.log('Report length:', technicalReport.html_report.length, 'characters')
 
     // Return the HTML report

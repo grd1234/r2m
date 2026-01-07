@@ -7,6 +7,7 @@ export interface N8nWorkflowRequest {
   query: string
   user_email?: string
   domain?: string
+  analysis_id?: string  // Unique identifier for tracking this analysis across workflows
   num_papers?: number
   max_papers?: number
   min_citations?: number
