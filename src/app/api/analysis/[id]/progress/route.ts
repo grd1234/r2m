@@ -82,11 +82,11 @@ const AGENT_DEFINITIONS: Omit<Agent, 'status' | 'progress' | 'duration' | 'start
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createClient();
-    const analysisId = params.id;
+    const { id: analysisId } = await params;
 
     // Fetch the analysis record
     const { data: analysis, error: analysisError } = await supabase
