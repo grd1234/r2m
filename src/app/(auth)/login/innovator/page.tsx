@@ -126,6 +126,7 @@ export default function InnovatorLoginPage() {
         // If profile doesn't exist, create one
         if (profileError && profileError.code === 'PGRST116') {
           console.log('Profile not found, creating innovator profile...')
+          // @ts-expect-error - Supabase types exclude id from Insert, but our schema requires it (FK to auth.users)
           const { error: createError } = await supabase
             .from('profiles')
             .insert({
@@ -134,7 +135,7 @@ export default function InnovatorLoginPage() {
               full_name: data.user.email?.split('@')[0] ?? 'User',
               user_type: 'startup',
               company_name: '',
-            } as any)
+            })
 
           if (createError) {
             console.error('Failed to create profile:', createError)
