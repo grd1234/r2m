@@ -52,7 +52,7 @@ export default function ResearcherLoginPage() {
         // If profile doesn't exist, create one
         if (profileError && profileError.code === 'PGRST116') {
           console.log('Profile not found, creating researcher profile...')
-          // @ts-expect-error - Supabase types exclude id from Insert, but our schema requires it (FK to auth.users)
+          // @ts-ignore - Supabase types exclude id from Insert, but our schema requires it (FK to auth.users)
           const { error: createError } = await supabase
             .from('profiles')
             .insert({
